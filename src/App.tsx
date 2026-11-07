@@ -5,6 +5,7 @@ import { LandingHome } from './components/LandingHome';
 import { Dashboard } from './components/Dashboard';
 import { FeedbackForm } from './components/FeedbackForm';
 import { OpportunitiesFeed } from './components/OpportunitiesFeed';
+import { FAQPage } from './components/FAQPage';
 import { AuthModal } from './components/AuthModal';
 import { ScraperModal } from './components/ScraperModal';
 import { INITIAL_FEEDBACK_DATA, INITIAL_OPPORTUNITIES } from './data/seedData';
@@ -20,9 +21,16 @@ import {
 
 const MainApp: React.FC = () => {
   const { isAuthorizedDomain } = useAuth();
-  const [activeTab, setActiveTab] = useState<'home' | 'dashboard' | 'feedback' | 'opportunities'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'dashboard' | 'feedback' | 'opportunities' | 'faq'>('home');
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [isScraperModalOpen, setIsScraperModalOpen] = useState<boolean>(false);
+
+  // Automatically scroll to the top of the page when navigating between views
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [activeTab]);
 
   // Live state
   const [feedbacks, setFeedbacks] = useState<InterviewFeedback[]>(INITIAL_FEEDBACK_DATA);
@@ -161,7 +169,7 @@ const MainApp: React.FC = () => {
       />
 
       {/* Main View Router */}
-      <main className="flex-1 pb-16">
+      <main className="flex-1 pb-24 md:pb-16 w-full box-border">
         {activeTab === 'home' && (
           <LandingHome
             onNavigate={(tab) => setActiveTab(tab)}
@@ -192,6 +200,12 @@ const MainApp: React.FC = () => {
             openScraperModal={() => setIsScraperModalOpen(true)}
           />
         )}
+
+        {activeTab === 'faq' && (
+          <FAQPage
+            onNavigate={(tab) => setActiveTab(tab)}
+          />
+        )}
       </main>
 
       {/* Modals */}
@@ -211,56 +225,39 @@ const MainApp: React.FC = () => {
       <footer className="border-t-2 border-black bg-[#111111] py-10 text-xs text-slate-400">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center space-x-2.5 text-white font-bold">
-              <div className="w-7 h-7 rounded-lg bg-[#FF5722] flex items-center justify-center text-white">
+            <div 
+              className="flex items-center space-x-2.5 text-white font-bold cursor-pointer group"
+              onClick={() => setActiveTab('home')}
+            >
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#FF5722] to-[#FFA726] flex items-center justify-center text-white shadow-md shadow-[#FF5722]/30 group-hover:scale-105 transition-transform">
                 <GraduationCap className="w-4 h-4" />
               </div>
-              <span className="text-sm font-sans tracking-tight">GradFlow | 50 Bangalore Engineering Colleges Network</span>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] text-slate-400">
-              <span className="text-white font-medium">RVCE</span>
-              <span className="text-[#FF5722]">•</span>
-              <span className="text-white font-medium">BMSCE</span>
-              <span className="text-[#FF5722]">•</span>
-              <span className="text-white font-medium">MSRIT</span>
-              <span className="text-[#FF5722]">•</span>
-              <span className="text-white font-medium">PESU</span>
-              <span className="text-[#FF5722]">•</span>
-              <span className="text-white font-medium">CMRIT</span>
-              <span className="text-[#FF5722]">•</span>
-              <span className="text-white font-medium">IIIT Bangalore</span>
-              <span className="text-[#FF5722]">•</span>
-              <span className="text-[#FF5722] font-bold">+44 More Colleges</span>
-            </div>
-
-            <div className="text-[11px] text-slate-400 font-mono">
-              Automated Midnight Scraper Cron | Google AI Studio
+              <span className="text-sm font-sans tracking-tight font-black">GradFlow</span>
             </div>
           </div>
 
-          <div className="pt-4 border-t border-[#222226] flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-400">
+          <div className="pt-4 border-t border-[#222226] flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-400">
             <div>
               100% Student-Powered Placement Intelligence. Zero commercial paywalls.
             </div>
-            <div className="flex items-center space-x-4">
-              <button 
-                onClick={() => setActiveTab('feedback')}
-                className="text-[#FF5722] hover:text-[#FFA726] font-semibold transition-colors cursor-pointer"
-              >
-                Submit Feedback (&lt; 2m)
-              </button>
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
               <button 
                 onClick={() => setActiveTab('dashboard')}
-                className="hover:text-white transition-colors cursor-pointer"
+                className="text-slate-300 hover:text-[#FF5722] font-semibold transition-colors duration-200 cursor-pointer min-h-[36px] flex items-center"
               >
-                Recruiter Analytics
+                Analytics
               </button>
               <button 
-                onClick={() => setIsScraperModalOpen(true)}
-                className="hover:text-white transition-colors cursor-pointer"
+                onClick={() => setActiveTab('feedback')}
+                className="text-slate-300 hover:text-[#FF5722] font-semibold transition-colors duration-200 cursor-pointer min-h-[36px] flex items-center"
               >
-                Cron Architecture
+                Submit Review
+              </button>
+              <button 
+                onClick={() => setActiveTab('opportunities')}
+                className="text-slate-300 hover:text-[#FF5722] font-semibold transition-colors duration-200 cursor-pointer min-h-[36px] flex items-center"
+              >
+                Radar
               </button>
             </div>
           </div>

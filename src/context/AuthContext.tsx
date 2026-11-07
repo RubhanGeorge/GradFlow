@@ -27,8 +27,8 @@ interface AuthContextType {
   clearError: () => void;
 }
 
-const ALLOWED_ADMIN_EMAIL = 'rubhan.george@gmail.com';
-const RESTRICTED_ERROR_MESSAGE = "Access Restricted: Only verified students from authorized Bangalore engineering colleges can register.";
+const ALLOWED_ADMIN_EMAILS = ['admin.demo@example.edu', 'evaluator@college.edu'];
+const RESTRICTED_ERROR_MESSAGE = "Please enter a valid student or campus email address.";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -38,22 +38,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Validate email domain against the 50 Bangalore college whitelist
+  // Validate email domain
   const validateCollegeDomain = (email: string | null | undefined): { isValid: boolean; domain: string } => {
     if (!email) return { isValid: false, domain: '' };
     const lower = email.toLowerCase().trim();
     const parts = lower.split('@');
-    if (parts.length !== 2) return { isValid: false, domain: '' };
+    if (parts.length !== 2 || !parts[1].includes('.')) return { isValid: false, domain: '' };
 
     const domain = parts[1];
-
-    // Admin bypass for developer
-    if (lower === ALLOWED_ADMIN_EMAIL) {
-      return { isValid: true, domain: 'cmrit.ac.in' };
-    }
-
-    const isValid = BANGALORE_COLLEGE_DOMAINS.includes(domain);
-    return { isValid, domain };
+    return { isValid: true, domain };
   };
 
   // Sync user profile with Firestore users collection
@@ -86,7 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         collegeDomain: domain,
         branch: 'Computer Science & Engineering',
         year: 'Final Year (2026 Batch)',
-        role: user.email === ALLOWED_ADMIN_EMAIL ? 'admin' : 'student'
+        role: (user.email && ALLOWED_ADMIN_EMAILS.includes(user.email.toLowerCase())) ? 'admin' : 'student'
       };
 
       setUserProfile(activeProfile);

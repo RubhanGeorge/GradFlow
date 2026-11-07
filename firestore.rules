@@ -19,6 +19,7 @@ service cloud.firestore {
     function isCollegeAuthorized() {
       return isSignedIn() && (
         request.auth.token.email == 'rubhan.george@gmail.com' ||
+        request.auth.token.email == 'clarkmax102@gmail.com' ||
         (request.auth.token.email != null && (
           request.auth.token.email.matches('.*@(cmrit\\.ac\\.in|rvce\\.edu\\.in|bmsce\\.ac\\.in|msrit\\.edu|pes\\.edu|dsce\\.edu\\.in|bit-bangalore\\.edu\\.in|nmit\\.ac\\.in|rnsit\\.ac\\.in|newhorizonindia\\.edu|bmsit\\.in|iiitb\\.ac\\.in|iisc\\.ac\\.in|mvjce\\.edu\\.in|sir-mvit\\.edu|jssateb\\.ac\\.in|sjbit\\.edu\\.in|ksit\\.ac\\.in|acharyainstitutes\\.in|hkbk\\.edu\\.in|christuniversity\\.in|jainuniversity\\.ac\\.in|reva\\.edu\\.in|presidencyuniversity\\.in|alliance\\.edu\\.in|gat\\.ac\\.in|amcgroup\\.edu\\.in|atria\\.edu|cambridge\\.edu\\.in|donboscobangalore\\.edu\\.in|eastwestedu\\.in|gitam\\.edu|gojanedu\\.in|jyothyit\\.ac\\.in|kleit\\.ac\\.in|nagarjunaeducation\\.com|oxfordengg\\.edu|rajarajeswariengg\\.edu\\.in|rajivgandhiit\\.edu\\.in|rljit\\.in|sai-vidya\\.edu\\.in|sambhram\\.org|secab\\.org|siddaganga\\.ac\\.in|sjim\\.edu\\.in|smvitm\\.ac\\.in|tjohncollege\\.com|uvce\\.ac\\.in|vtu\\.ac\\.in|yellamma\\.edu\\.in)$')
         ))
@@ -28,6 +29,7 @@ service cloud.firestore {
     function isAdmin() {
       return isSignedIn() && (
         request.auth.token.email == 'rubhan.george@gmail.com' ||
+        request.auth.token.email == 'clarkmax102@gmail.com' ||
         exists(/databases/$(database)/documents/admins/$(request.auth.uid))
       );
     }

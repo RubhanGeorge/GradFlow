@@ -15,6 +15,7 @@ import {
   SlidersHorizontal
 } from 'lucide-react';
 import { Opportunity } from '../types';
+import { MovingParticlesBackground } from './MovingParticlesBackground';
 
 interface OpportunitiesFeedProps {
   opportunities: Opportunity[];
@@ -51,6 +52,9 @@ export const OpportunitiesFeed: React.FC<OpportunitiesFeedProps> = ({
     <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-8">
       {/* Header Banner - Sleek Onyx Black with Glowing Orange Accent */}
       <div className="bg-[#111111] rounded-3xl p-6 sm:p-8 text-white border-2 border-black shadow-xl relative overflow-hidden">
+        {/* Moving Particles Animation for Section Design Background */}
+        <MovingParticlesBackground variant="card" particleCount={55} />
+
         <div className="absolute top-0 right-0 w-80 h-80 bg-[#FF5722]/15 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2 max-w-2xl">
@@ -62,7 +66,7 @@ export const OpportunitiesFeed: React.FC<OpportunitiesFeedProps> = ({
               Internships, Hackathons & Competitions
             </h1>
             <p className="text-xs sm:text-sm text-slate-300">
-              Synchronized by automated cron from Unstop, Devpost, and leading Bangalore tech portals, summarized with Gemini AI.
+              Synchronized by automated cron from Unstop, Devpost, and leading tech portals, summarized with Gemini AI.
             </p>
           </div>
 
@@ -77,14 +81,14 @@ export const OpportunitiesFeed: React.FC<OpportunitiesFeedProps> = ({
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white p-4 sm:p-6 rounded-2xl border-2 border-[#111111] shadow-[2px_2px_0px_0px_#111111] flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="bg-white p-4 sm:p-6 rounded-2xl border-2 border-[#111111] shadow-[2px_2px_0px_0px_#111111] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 w-full box-border">
         {/* Type Filter Pills */}
-        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
           {['ALL', 'Internship', 'Hackathon', 'Competition'].map(type => (
             <button
               key={type}
               onClick={() => setFilterType(type)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border-2 cursor-pointer ${
+              className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-bold transition-all border-2 cursor-pointer min-h-[44px] flex items-center justify-center shrink-0 ${
                 filterType === type
                   ? 'bg-[#FF5722] text-white border-[#FF5722] shadow-sm'
                   : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
@@ -96,20 +100,20 @@ export const OpportunitiesFeed: React.FC<OpportunitiesFeedProps> = ({
         </div>
 
         {/* Search Field */}
-        <div className="relative w-full sm:w-72">
-          <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+        <div className="relative w-full md:w-80">
+          <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search role, skills, provider..."
-            className="w-full pl-9 pr-3 py-2 bg-slate-50 border-2 border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-[#FF5722]"
+            className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-[#FF5722] min-h-[44px]"
           />
         </div>
       </div>
 
       {/* Opportunities Card Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full box-border">
         {filteredOpportunities.map(opp => {
           const typeBadgeColor = 
             opp.type === 'Internship' ? 'bg-[#FFF3E0] text-[#E64A19] border-[#FF5722]' :
@@ -119,28 +123,28 @@ export const OpportunitiesFeed: React.FC<OpportunitiesFeedProps> = ({
           return (
             <div
               key={opp.id || opp.title}
-              className="bg-white rounded-3xl border-2 border-[#111111] p-6 shadow-[4px_4px_0px_0px_#111111] hover:translate-y-[-2px] transition-all flex flex-col justify-between space-y-4"
+              className="bg-white rounded-3xl border-2 border-[#111111] p-4 sm:p-6 shadow-[3px_3px_0px_0px_#111111] sm:shadow-[4px_4px_0px_0px_#111111] hover:translate-y-[-2px] transition-all flex flex-col justify-between space-y-4 w-full box-border"
             >
               <div className="space-y-3">
                 {/* Header: Title, Provider, Type */}
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md border-2 ${typeBadgeColor}`}>
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5">
+                  <div className="min-w-0">
+                    <span className={`inline-block text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md border-2 ${typeBadgeColor}`}>
                       {opp.type}
                     </span>
-                    <h3 className="text-base sm:text-lg font-black text-[#111111] mt-2.5 font-sans leading-snug">
+                    <h3 className="text-base sm:text-lg font-black text-[#111111] mt-2 font-sans leading-snug">
                       {opp.title}
                     </h3>
-                    <div className="text-xs font-bold text-[#FF5722] mt-0.5">
+                    <div className="text-xs font-bold text-[#FF5722] mt-0.5 truncate">
                       {opp.provider}
                     </div>
                   </div>
 
                   {opp.stipendOrPrize && (
-                    <div className="text-right shrink-0">
-                      <span className="inline-flex items-center px-2.5 py-1.5 rounded-lg bg-[#111111] text-emerald-400 text-xs font-mono font-bold border border-black shadow-xs">
-                        <DollarSign className="w-3.5 h-3.5 mr-0.5 text-emerald-400" />
-                        {opp.stipendOrPrize}
+                    <div className="self-start sm:self-auto shrink-0">
+                      <span className="inline-flex items-center px-2.5 py-1.5 rounded-lg bg-[#111111] text-emerald-400 text-[11px] sm:text-xs font-mono font-bold border border-black shadow-xs">
+                        <DollarSign className="w-3.5 h-3.5 mr-0.5 text-emerald-400 shrink-0" />
+                        <span className="truncate">{opp.stipendOrPrize}</span>
                       </span>
                     </div>
                   )}
@@ -172,14 +176,14 @@ export const OpportunitiesFeed: React.FC<OpportunitiesFeedProps> = ({
               </div>
 
               {/* Bottom Meta & Apply Link */}
-              <div className="pt-3 border-t-2 border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
-                <div className="flex items-center space-x-3 text-slate-600 text-[11px] font-medium">
+              <div className="pt-3 border-t-2 border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-slate-600 text-[11px] font-medium">
                   <span className="flex items-center">
-                    <Calendar className="w-3.5 h-3.5 mr-1 text-[#FF5722]" />
-                    Deadline: <strong>{opp.deadline}</strong>
+                    <Calendar className="w-3.5 h-3.5 mr-1 text-[#FF5722] shrink-0" />
+                    Deadline: <strong className="ml-0.5">{opp.deadline}</strong>
                   </span>
                   <span className="flex items-center">
-                    <MapPin className="w-3.5 h-3.5 mr-1 text-slate-500" />
+                    <MapPin className="w-3.5 h-3.5 mr-1 text-slate-500 shrink-0" />
                     {opp.location}
                   </span>
                 </div>
@@ -188,10 +192,10 @@ export const OpportunitiesFeed: React.FC<OpportunitiesFeedProps> = ({
                   href={opp.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center px-4 py-2 rounded-xl bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-xs transition-colors shadow-md shadow-[#FF5722]/20 cursor-pointer"
+                  className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-xs transition-colors shadow-md shadow-[#FF5722]/20 cursor-pointer min-h-[44px] self-stretch sm:self-auto"
                 >
                   <span>Apply Now</span>
-                  <ExternalLink className="w-3.5 h-3.5 ml-1.5" />
+                  <ExternalLink className="w-3.5 h-3.5 ml-1.5 shrink-0" />
                 </a>
               </div>
             </div>

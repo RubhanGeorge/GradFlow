@@ -57,7 +57,12 @@ export const BANGALORE_COLLEGE_DOMAINS: string[] = [
   "yellamma.edu.in"     // Vemana Institute of Technology
 ];
 
-export const BANGALORE_COLLEGES_METADATA: Record<string, string> = {
+export interface CollegeEntry {
+  domain: string;
+  name: string;
+}
+
+export const BANGALORE_COLLEGE_MAP: Record<string, string> = {
   "cmrit.ac.in": "CMR Institute of Technology",
   "rvce.edu.in": "RV College of Engineering",
   "bmsce.ac.in": "BMS College of Engineering",
@@ -110,6 +115,22 @@ export const BANGALORE_COLLEGES_METADATA: Record<string, string> = {
   "yellamma.edu.in": "Vemana Institute of Technology"
 };
 
+export type BangaloreCollegesData = CollegeEntry[] & Record<string, string>;
+
+export const BANGALORE_COLLEGES_METADATA: BangaloreCollegesData = Object.assign(
+  BANGALORE_COLLEGE_DOMAINS.map(domain => ({
+    domain,
+    name: BANGALORE_COLLEGE_MAP[domain] || domain
+  })),
+  BANGALORE_COLLEGE_MAP
+) as BangaloreCollegesData;
+
+export const isBangaloreCollegeDomain = (domain: string): boolean => {
+  if (!domain) return false;
+  const clean = domain.trim().toLowerCase().replace(/^@/, '');
+  return BANGALORE_COLLEGE_DOMAINS.includes(clean);
+};
+
 export const getCollegeName = (domain: string): string => {
-  return BANGALORE_COLLEGES_METADATA[domain.toLowerCase()] || domain;
+  return BANGALORE_COLLEGE_MAP[domain.toLowerCase()] || domain;
 };

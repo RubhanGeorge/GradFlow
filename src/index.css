@@ -83,6 +83,39 @@
   animation: pulseAura 2.5s infinite;
 }
 
+/* Continuous Infinite Marquee Animations (Right to Left) */
+@keyframes marqueeLeft {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes marqueeLeftAlt {
+  0% {
+    transform: translateX(-25%);
+  }
+  100% {
+    transform: translateX(-75%);
+  }
+}
+
+.animate-marquee-left {
+  display: flex;
+  width: max-content;
+  animation: marqueeLeft 120s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-left-alt {
+  display: flex;
+  width: max-content;
+  animation: marqueeLeftAlt 100s linear infinite;
+  will-change: transform;
+}
+
 /* Custom Scrollbar for Topic Cloud and Dropdowns */
 ::-webkit-scrollbar {
   width: 6px;
