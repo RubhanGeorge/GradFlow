@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+@layer utilities {
+  /* Warm Canvas & Obsidian Finishes */
+  .bg-canvas-warm {
+    background-color: #FAF9F6;
+  }
+  
+  .bg-obsidian-900 {
+    background-color: #09090B;
+  }
+  
+  .bg-obsidian-800 {
+    background-color: #121215;
+  }
+
+  .bg-obsidian-700 {
+    background-color: #18181B;
+  }
+
+  /* Ambient Glow Gradients */
+  .bg-radial-glow {
+    background: radial-gradient(circle at top, rgba(255, 87, 34, 0.12) 0%, rgba(255, 87, 34, 0.02) 45%, transparent 70%);
+  }
+
+  .bg-radial-hero {
+    background: radial-gradient(circle at 50% 20%, rgba(255, 87, 34, 0.15) 0%, rgba(18, 18, 21, 0.6) 50%, #09090B 100%);
+  }
+
+  /* Subtle 1px Glass & Hairline Borders */
+  .border-glass-orange {
+    border-color: rgba(255, 87, 34, 0.2);
+  }
+
+  .border-subtle-dark {
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .border-subtle-light {
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+
+  /* Multi-layered Soft Shadows */
+  .shadow-fintech {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(255, 87, 34, 0.04);
+  }
+
+  .shadow-fintech-hover {
+    box-shadow: 0 25px 35px -8px rgba(0, 0, 0, 0.1), 0 12px 16px -8px rgba(255, 87, 34, 0.12);
+  }
+
+  .shadow-glow-orange {
+    box-shadow: 0 0 25px rgba(255, 87, 34, 0.25);
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pulseAura {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 87, 34, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 87, 34, 0);
+  }
+}
+
+.animate-pulse-aura {
+  animation: pulseAura 2.5s infinite;
+}
+
+/* Custom Scrollbar for Topic Cloud and Dropdowns */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(18, 18, 21, 0.2);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 87, 34, 0.5);
+}

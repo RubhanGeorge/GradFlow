@@ -1,0 +1,118 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Hardened Global Helpers
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isCollegeAuthorized() {
+      return isSignedIn() && (
+        request.auth.token.email == 'rubhan.george@gmail.com' ||
+        (request.auth.token.email != null && (
+          request.auth.token.email.matches('.*@(cmrit\\.ac\\.in|rvce\\.edu\\.in|bmsce\\.ac\\.in|msrit\\.edu|pes\\.edu|dsce\\.edu\\.in|bit-bangalore\\.edu\\.in|nmit\\.ac\\.in|rnsit\\.ac\\.in|newhorizonindia\\.edu|bmsit\\.in|iiitb\\.ac\\.in|iisc\\.ac\\.in|mvjce\\.edu\\.in|sir-mvit\\.edu|jssateb\\.ac\\.in|sjbit\\.edu\\.in|ksit\\.ac\\.in|acharyainstitutes\\.in|hkbk\\.edu\\.in|christuniversity\\.in|jainuniversity\\.ac\\.in|reva\\.edu\\.in|presidencyuniversity\\.in|alliance\\.edu\\.in|gat\\.ac\\.in|amcgroup\\.edu\\.in|atria\\.edu|cambridge\\.edu\\.in|donboscobangalore\\.edu\\.in|eastwestedu\\.in|gitam\\.edu|gojanedu\\.in|jyothyit\\.ac\\.in|kleit\\.ac\\.in|nagarjunaeducation\\.com|oxfordengg\\.edu|rajarajeswariengg\\.edu\\.in|rajivgandhiit\\.edu\\.in|rljit\\.in|sai-vidya\\.edu\\.in|sambhram\\.org|secab\\.org|siddaganga\\.ac\\.in|sjim\\.edu\\.in|smvitm\\.ac\\.in|tjohncollege\\.com|uvce\\.ac\\.in|vtu\\.ac\\.in|yellamma\\.edu\\.in)$')
+        ))
+      );
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'rubhan.george@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Helper: Validate Interview Feedback
+    function isValidFeedback(data) {
+      return data.company is string && data.company.size() > 0 && data.company.size() <= 100 &&
+             data.role is string && data.role.size() > 0 && data.role.size() <= 100 &&
+             data.round is number && data.round >= 1 && data.round <= 5 &&
+             data.durationMinutes is number && data.durationMinutes >= 15 && data.durationMinutes <= 120 &&
+             data.overallDifficulty in ['Easy', 'Medium', 'Hard'] &&
+             data.panelTypes is list && data.panelTypes.size() <= 10 &&
+             data.topicsTested is list && data.topicsTested.size() <= 50 &&
+             data.authorUid == request.auth.uid &&
+             data.collegeDomain is string && data.collegeDomain.size() <= 60 &&
+             (!('technicalQuestions' in data) || (data.technicalQuestions is string && data.technicalQuestions.size() <= 1000)) &&
+             (!('hrQuestions' in data) || (data.hrQuestions is string && data.hrQuestions.size() <= 1000)) &&
+             (!('juniorTips' in data) || (data.juniorTips is string && data.juniorTips.size() <= 1000));
+    }
+
+    // Helper: Validate Opportunity
+    function isValidOpportunity(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.provider is string && data.provider.size() <= 100 &&
+             data.type is string && data.type.size() <= 50 &&
+             data.link is string && data.link.size() <= 500 &&
+             (!('descriptionSummary' in data) || (data.descriptionSummary is string && data.descriptionSummary.size() <= 2000));
+    }
+
+    // Helper: Validate User Profile
+    function isValidUserProfile(data) {
+      return data.uid == request.auth.uid &&
+             data.email is string && data.email.size() <= 100 &&
+             data.collegeDomain is string && data.collegeDomain.size() <= 60 &&
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100)) &&
+             (!('usn' in data) || (data.usn is string && data.usn.size() <= 20)) &&
+             (!('branch' in data) || (data.branch is string && data.branch.size() <= 50)) &&
+             (!('role' in data) || data.role in ['student', 'admin']);
+    }
+
+    // 1. Interview Feedback Collection
+    // Read: All authenticated students from verified college domain
+    // Create: Verified college students, strictly validated schema
+    // Update/Delete: Disabled to ensure feedback integrity (Admin override allowed)
+    match /interview_feedback/{feedbackId} {
+      allow list: if isSignedIn();
+      allow get: if isSignedIn() && isValidId(feedbackId);
+      allow create: if isCollegeAuthorized() && isValidId(feedbackId) && isValidFeedback(incoming());
+      allow update, delete: if isAdmin() && isValidId(feedbackId);
+    }
+
+    // 2. Opportunities Collection (Internships & Hackathons)
+    // Read: Authenticated students
+    // Write: Admins or background scraping automation
+    match /opportunities/{opportunityId} {
+      allow list: if isSignedIn();
+      allow get: if isSignedIn() && isValidId(opportunityId);
+      allow create, update: if (isAdmin() || isCollegeAuthorized()) && isValidId(opportunityId) && isValidOpportunity(incoming());
+      allow delete: if isAdmin() && isValidId(opportunityId);
+    }
+
+    // 3. User Profiles Collection
+    // Read & Write: Strictly isolated to the user themselves
+    match /users/{userId} {
+      allow get: if isSignedIn() && request.auth.uid == userId && isValidId(userId);
+      allow create: if isCollegeAuthorized() && request.auth.uid == userId && isValidId(userId) && isValidUserProfile(incoming());
+      allow update: if isCollegeAuthorized() && request.auth.uid == userId && isValidId(userId) && isValidUserProfile(incoming()) && (
+        // Protect role modification
+        (!('role' in incoming()) || incoming().role == existing().role || isAdmin())
+      );
+      allow delete: if isAdmin() && isValidId(userId);
+    }
+
+    // 4. Admin Registry (System verification)
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+  }
+}

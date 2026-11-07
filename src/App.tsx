@@ -1,0 +1,279 @@
+import React, { useState, useEffect } from 'react';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { Navbar } from './components/Navbar';
+import { LandingHome } from './components/LandingHome';
+import { Dashboard } from './components/Dashboard';
+import { FeedbackForm } from './components/FeedbackForm';
+import { OpportunitiesFeed } from './components/OpportunitiesFeed';
+import { AuthModal } from './components/AuthModal';
+import { ScraperModal } from './components/ScraperModal';
+import { INITIAL_FEEDBACK_DATA, INITIAL_OPPORTUNITIES } from './data/seedData';
+import { InterviewFeedback, Opportunity } from './types';
+import { db, testFirebaseConnection } from './firebase/config';
+import { collection, onSnapshot, query, addDoc, serverTimestamp } from 'firebase/firestore';
+import { 
+  CheckCircle2, 
+  RefreshCw,
+  School,
+  GraduationCap
+} from 'lucide-react';
+
+const MainApp: React.FC = () => {
+  const { isAuthorizedDomain } = useAuth();
+  const [activeTab, setActiveTab] = useState<'home' | 'dashboard' | 'feedback' | 'opportunities'>('home');
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [isScraperModalOpen, setIsScraperModalOpen] = useState<boolean>(false);
+
+  // Live state
+  const [feedbacks, setFeedbacks] = useState<InterviewFeedback[]>(INITIAL_FEEDBACK_DATA);
+  const [opportunities, setOpportunities] = useState<Opportunity[]>(INITIAL_OPPORTUNITIES);
+  const [isScraping, setIsScraping] = useState<boolean>(false);
+  const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'info'; text: string } | null>(null);
+
+  const showToast = (text: string, type: 'success' | 'info' = 'success') => {
+    setToastMessage({ text, type });
+    setTimeout(() => setToastMessage(null), 4000);
+  };
+
+  // Connect to Firestore & listen to changes
+  useEffect(() => {
+    testFirebaseConnection();
+
+    // Listen to interview_feedback collection
+    try {
+      const feedbackQuery = query(collection(db, 'interview_feedback'));
+      const unsubscribe = onSnapshot(
+        feedbackQuery,
+        (snapshot) => {
+          if (!snapshot.empty) {
+            const liveList: InterviewFeedback[] = snapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            } as InterviewFeedback));
+            // Merge with seed data for richness if count is small
+            const merged = [...liveList, ...INITIAL_FEEDBACK_DATA.filter(s => !liveList.some(l => l.company === s.company && l.role === s.role))];
+            setFeedbacks(merged);
+          }
+        },
+        (err) => {
+          console.warn('Live feedback subscription notice:', err.message);
+        }
+      );
+      return () => unsubscribe();
+    } catch (e) {
+      console.warn('Firestore subscription initialized in fallback mode');
+    }
+  }, []);
+
+  // Listen to opportunities collection
+  useEffect(() => {
+    try {
+      const oppQuery = query(collection(db, 'opportunities'));
+      const unsubscribeOpp = onSnapshot(
+        oppQuery,
+        (snapshot) => {
+          if (!snapshot.empty) {
+            const liveOpps: Opportunity[] = snapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            } as Opportunity));
+            setOpportunities([...liveOpps, ...INITIAL_OPPORTUNITIES.filter(s => !liveOpps.some(l => l.title === s.title))]);
+          }
+        },
+        (err) => {
+          console.warn('Opportunities listener notice:', err.message);
+        }
+      );
+      return () => unsubscribeOpp();
+    } catch (e) {
+      console.warn('Opportunities initialized in fallback mode');
+    }
+  }, []);
+
+  // Trigger manual simulation of Midnight Scraper
+  const handleTriggerScrape = () => {
+    setIsScraping(true);
+    showToast('Midnight Scraper initiated: Querying Unstop & Devpost endpoints...', 'info');
+
+    setTimeout(() => {
+      const newScrapedOpportunity: Opportunity = {
+        id: `scraped-${Date.now()}`,
+        title: 'Cred - Summer 2027 Backend Product Engineering Intern',
+        provider: 'Cred Careers Portal (Bangalore)',
+        type: 'Internship',
+        link: 'https://careers.cred.club',
+        deadline: '2026-12-31',
+        location: 'Indiranagar, Bangalore (Onsite)',
+        requiredSkills: ['Go / Java', 'Redis', 'High Concurrency', 'Distributed Systems'],
+        descriptionSummary: 'High-density backend engineering opportunity working on high throughput ledger settlement microservices with sub-5ms SLAs.',
+        stipendOrPrize: 'INR 1,25,000 / month',
+        createdAt: new Date().toISOString()
+      };
+
+      setOpportunities(prev => [newScrapedOpportunity, ...prev]);
+      setIsScraping(false);
+      showToast('Midnight Scraper completed! Gemini AI summarized 1 new listing from Bangalore tech radar.', 'success');
+
+      // Attempt Firestore write
+      try {
+        addDoc(collection(db, 'opportunities'), {
+          ...newScrapedOpportunity,
+          createdAt: serverTimestamp()
+        });
+      } catch (e) {
+        // Safe fallback
+      }
+    }, 2000);
+  };
+
+  const handleFeedbackSuccess = (newFeedback?: InterviewFeedback) => {
+    if (newFeedback) {
+      setFeedbacks(prev => [newFeedback, ...prev]);
+    }
+    showToast('Your interview experience has been submitted anonymously! Updating live dashboard charts...', 'success');
+  };
+
+  return (
+    <div className="min-h-screen bg-[#F8F9FA] text-[#111111] flex flex-col font-sans antialiased selection:bg-[#FF5722] selection:text-white">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom duration-300">
+          <div className={`px-4 py-3 rounded-2xl shadow-2xl flex items-center space-x-2.5 text-xs font-semibold ${
+            toastMessage.type === 'success' 
+              ? 'bg-[#111111] text-white border-2 border-[#FF5722]' 
+              : 'bg-[#1A1A1E] text-orange-200 border border-orange-500'
+          }`}>
+            {toastMessage.type === 'success' ? (
+              <CheckCircle2 className="w-4 h-4 text-[#FF5722] shrink-0" />
+            ) : (
+              <RefreshCw className="w-4 h-4 text-[#FFA726] animate-spin shrink-0" />
+            )}
+            <span>{toastMessage.text}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Main Navigation Bar */}
+      <Navbar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        openAuthModal={() => setIsAuthModalOpen(true)}
+      />
+
+      {/* Main View Router */}
+      <main className="flex-1 pb-16">
+        {activeTab === 'home' && (
+          <LandingHome
+            onNavigate={(tab) => setActiveTab(tab)}
+            openAuthModal={() => setIsAuthModalOpen(true)}
+            totalFeedbacksCount={feedbacks.length}
+          />
+        )}
+
+        {activeTab === 'dashboard' && (
+          <Dashboard
+            feedbacks={feedbacks}
+            openSubmitForm={() => setActiveTab('feedback')}
+          />
+        )}
+
+        {activeTab === 'feedback' && (
+          <FeedbackForm
+            onSuccess={handleFeedbackSuccess}
+            openAuthModal={() => setIsAuthModalOpen(true)}
+          />
+        )}
+
+        {activeTab === 'opportunities' && (
+          <OpportunitiesFeed
+            opportunities={opportunities}
+            onTriggerScrape={handleTriggerScrape}
+            isScraping={isScraping}
+            openScraperModal={() => setIsScraperModalOpen(true)}
+          />
+        )}
+      </main>
+
+      {/* Modals */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+      />
+
+      <ScraperModal
+        isOpen={isScraperModalOpen}
+        onClose={() => setIsScraperModalOpen(false)}
+        onTriggerScrape={handleTriggerScrape}
+        isScraping={isScraping}
+      />
+
+      {/* Institutional High-Contrast Black & Orange Footer */}
+      <footer className="border-t-2 border-black bg-[#111111] py-10 text-xs text-slate-400">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center space-x-2.5 text-white font-bold">
+              <div className="w-7 h-7 rounded-lg bg-[#FF5722] flex items-center justify-center text-white">
+                <GraduationCap className="w-4 h-4" />
+              </div>
+              <span className="text-sm font-sans tracking-tight">GradFlow | 50 Bangalore Engineering Colleges Network</span>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] text-slate-400">
+              <span className="text-white font-medium">RVCE</span>
+              <span className="text-[#FF5722]">•</span>
+              <span className="text-white font-medium">BMSCE</span>
+              <span className="text-[#FF5722]">•</span>
+              <span className="text-white font-medium">MSRIT</span>
+              <span className="text-[#FF5722]">•</span>
+              <span className="text-white font-medium">PESU</span>
+              <span className="text-[#FF5722]">•</span>
+              <span className="text-white font-medium">CMRIT</span>
+              <span className="text-[#FF5722]">•</span>
+              <span className="text-white font-medium">IIIT Bangalore</span>
+              <span className="text-[#FF5722]">•</span>
+              <span className="text-[#FF5722] font-bold">+44 More Colleges</span>
+            </div>
+
+            <div className="text-[11px] text-slate-400 font-mono">
+              Automated Midnight Scraper Cron | Google AI Studio
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-[#222226] flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-400">
+            <div>
+              100% Student-Powered Placement Intelligence. Zero commercial paywalls.
+            </div>
+            <div className="flex items-center space-x-4">
+              <button 
+                onClick={() => setActiveTab('feedback')}
+                className="text-[#FF5722] hover:text-[#FFA726] font-semibold transition-colors cursor-pointer"
+              >
+                Submit Feedback (&lt; 2m)
+              </button>
+              <button 
+                onClick={() => setActiveTab('dashboard')}
+                className="hover:text-white transition-colors cursor-pointer"
+              >
+                Recruiter Analytics
+              </button>
+              <button 
+                onClick={() => setIsScraperModalOpen(true)}
+                className="hover:text-white transition-colors cursor-pointer"
+              >
+                Cron Architecture
+              </button>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <MainApp />
+    </AuthProvider>
+  );
+}

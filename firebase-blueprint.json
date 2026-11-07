@@ -1,0 +1,217 @@
+{
+  "entities": {
+    "InterviewFeedback": {
+      "title": "InterviewFeedback",
+      "description": "Anonymous interview feedback submitted by verified college students.",
+      "type": "object",
+      "properties": {
+        "company": {
+          "type": "string",
+          "description": "Company name",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "role": {
+          "type": "string",
+          "description": "Targeted job role / profile",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "round": {
+          "type": "number",
+          "description": "Interview round number (1: OA, 2: Tech 1, 3: Tech 2, 4: HR, 5: Composite)"
+        },
+        "durationMinutes": {
+          "type": "number",
+          "description": "Round duration in minutes (15 to 120)"
+        },
+        "overallDifficulty": {
+          "type": "string",
+          "description": "Overall difficulty rating",
+          "enum": ["Easy", "Medium", "Hard"]
+        },
+        "panelTypes": {
+          "type": "array",
+          "description": "Selected interviewer backgrounds"
+        },
+        "questionStyles": {
+          "type": "object",
+          "description": "Question style percentage breakdown and individual difficulty levels"
+        },
+        "topicsTested": {
+          "type": "array",
+          "description": "Specific topics tested from the 50-topic checklist"
+        },
+        "technicalQuestions": {
+          "type": "string",
+          "description": "Optional specific technical and coding questions asked",
+          "maxLength": 1000
+        },
+        "hrQuestions": {
+          "type": "string",
+          "description": "Optional HR and behavioral questions asked",
+          "maxLength": 1000
+        },
+        "juniorTips": {
+          "type": "string",
+          "description": "Optional preparation tips and warnings for juniors",
+          "maxLength": 1000
+        },
+        "submittedAt": {
+          "type": "string",
+          "description": "Server timestamp of submission"
+        },
+        "collegeDomain": {
+          "type": "string",
+          "description": "Validated college email domain of author",
+          "maxLength": 60
+        },
+        "authorUid": {
+          "type": "string",
+          "description": "Firebase Auth UID of student submitter",
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "company",
+        "role",
+        "round",
+        "durationMinutes",
+        "overallDifficulty",
+        "panelTypes",
+        "questionStyles",
+        "topicsTested",
+        "collegeDomain",
+        "authorUid"
+      ]
+    },
+    "Opportunity": {
+      "title": "Opportunity",
+      "description": "Internships, hackathons, and job opportunities curated or scraped for students.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Job/Hackathon Title",
+          "maxLength": 200
+        },
+        "provider": {
+          "type": "string",
+          "description": "Source platform (e.g., Unstop, Devpost, Adzuna, Direct)",
+          "maxLength": 100
+        },
+        "type": {
+          "type": "string",
+          "description": "Opportunity category (Internship, Hackathon, Full-Time, Competition)",
+          "maxLength": 50
+        },
+        "link": {
+          "type": "string",
+          "description": "Direct application or event URL",
+          "maxLength": 500
+        },
+        "deadline": {
+          "type": "string",
+          "description": "Application deadline or event date",
+          "maxLength": 100
+        },
+        "location": {
+          "type": "string",
+          "description": "Job or event location",
+          "maxLength": 100
+        },
+        "requiredSkills": {
+          "type": "array",
+          "description": "Key tech stack and required skills"
+        },
+        "descriptionSummary": {
+          "type": "string",
+          "description": "AI-summarized brief description",
+          "maxLength": 1500
+        },
+        "stipendOrPrize": {
+          "type": "string",
+          "description": "Stipend amount or prize pool",
+          "maxLength": 100
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation timestamp"
+        }
+      },
+      "required": ["title", "provider", "type", "link"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Profile data for registered student or placement coordinator.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID",
+          "maxLength": 128
+        },
+        "email": {
+          "type": "string",
+          "description": "Official college email address",
+          "maxLength": 100
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Student full name",
+          "maxLength": 100
+        },
+        "collegeDomain": {
+          "type": "string",
+          "description": "Validated college domain e.g. cmrit.ac.in",
+          "maxLength": 60
+        },
+        "usn": {
+          "type": "string",
+          "description": "University Seat Number",
+          "maxLength": 20
+        },
+        "branch": {
+          "type": "string",
+          "description": "Engineering branch (CSE, ISE, AIML, etc.)",
+          "maxLength": 50
+        },
+        "year": {
+          "type": "string",
+          "description": "Graduation year or current year",
+          "maxLength": 20
+        },
+        "role": {
+          "type": "string",
+          "description": "User permission role",
+          "enum": ["student", "admin"]
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Account registration date"
+        }
+      },
+      "required": ["uid", "email", "collegeDomain"]
+    }
+  },
+  "firestore": {
+    "/interview_feedback/{feedbackId}": {
+      "schema": {
+        "$ref": "InterviewFeedback"
+      },
+      "description": "Anonymous interview submissions"
+    },
+    "/opportunities/{opportunityId}": {
+      "schema": {
+        "$ref": "Opportunity"
+      },
+      "description": "Scraped and AI-summarized placement opportunities"
+    },
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "UserProfile"
+      },
+      "description": "Private user profile records"
+    }
+  }
+}
