@@ -163,12 +163,8 @@ export const FAQPage: React.FC<FAQPageProps> = ({ onNavigate }) => {
     <div className="w-full min-h-screen bg-[#F8F9FA] text-[#111111] pb-16">
       {/* Hero Header Section */}
       <section className="relative overflow-hidden bg-[#09090B] text-white pt-12 pb-16 sm:pt-16 sm:pb-20 border-b border-white/10">
-        {/* Moving Particles Animation for Section Design Background */}
+        {/* Simple moving particles animation (crisp, zero-glow) */}
         <MovingParticlesBackground variant="hero" particleCount={95} />
-
-        {/* Ambient Gradient Glows */}
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#FF5722]/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-[#FFA726]/10 rounded-full blur-3xl pointer-events-none" />
         
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 w-full box-border">
           {/* Badge */}
@@ -392,10 +388,8 @@ export const FAQPage: React.FC<FAQPageProps> = ({ onNavigate }) => {
 
         {/* Bottom Interactive Call to Action Banner */}
         <div className="mt-12 bg-gradient-to-br from-[#111111] to-[#1A1A1E] rounded-3xl p-6 sm:p-8 text-white border border-white/10 shadow-xl relative overflow-hidden">
-          {/* Moving Particles Animation for Section Design Background */}
+          {/* Simple moving particles animation (crisp, zero-glow) */}
           <MovingParticlesBackground variant="card" particleCount={45} />
-
-          <div className="absolute right-0 top-0 w-64 h-64 bg-[#FF5722]/10 rounded-full blur-2xl pointer-events-none" />
           
           <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="text-center md:text-left space-y-1.5 max-w-xl">

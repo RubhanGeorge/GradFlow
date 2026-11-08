@@ -164,12 +164,8 @@ export const LandingHome: React.FC<LandingHomeProps> = ({
           HERO SECTION: Obsidian Black Canvas with Electric Orange Ambient Radial Glow
          ========================================================================= */}
       <section className="relative overflow-hidden bg-[#09090B] text-white pt-10 sm:pt-16 pb-16 sm:pb-20 px-4 sm:px-6 lg:px-8 border-b border-white/10 w-full box-border">
-        {/* Endless Moving Particle Background (Zero Lag Native Canvas 60FPS) */}
+        {/* Simple moving particles canvas (crisp, zero-glow) */}
         <MovingParticlesBackground variant="hero" particleCount={115} />
-
-        {/* Soft Ambient Radial Glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[750px] max-w-full h-[450px] bg-[radial-gradient(circle_at_top,rgba(255,87,34,0.18)_0%,transparent_70%)] pointer-events-none z-0" />
-        <div className="absolute top-1/3 -right-20 w-96 max-w-full h-96 bg-[radial-gradient(circle,rgba(255,112,67,0.1)_0%,transparent_60%)] pointer-events-none z-0" />
 
         <div className="max-w-6xl mx-auto relative z-10 space-y-8 sm:space-y-10 w-full box-border">
           {/* Top Pill Kicker */}
@@ -562,10 +558,8 @@ export const LandingHome: React.FC<LandingHomeProps> = ({
          ========================================================================= */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-[#09090B] text-white rounded-3xl p-6 sm:p-10 md:p-12 border border-white/10 shadow-2xl relative overflow-hidden">
-          {/* Moving Particles Animation for Deep Design Section */}
+          {/* Simple moving particles animation (crisp, zero-glow) */}
           <MovingParticlesBackground variant="card" particleCount={65} />
-
-          <div className="absolute top-0 right-0 w-96 h-96 bg-[#FF5722]/10 rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12">
             <div className="space-y-4 max-w-xl">
@@ -677,14 +671,8 @@ export const LandingHome: React.FC<LandingHomeProps> = ({
         <div className="relative max-w-4xl mx-auto">
           {/* Card Frame */}
           <div className="bg-[#09090B] text-white rounded-3xl p-6 sm:p-10 border-2 border-white/10 shadow-2xl relative overflow-hidden transition-all duration-300">
-            {/* Moving Particles Animation for Deep Design Section */}
+            {/* Simple moving particles animation (crisp, zero-glow) */}
             <MovingParticlesBackground variant="card" particleCount={50} />
-
-            {/* Ambient Radial Accent */}
-            <div 
-              className="absolute top-0 right-0 w-80 h-80 rounded-full blur-3xl pointer-events-none opacity-20"
-              style={{ backgroundColor: SUCCESS_STORIES[storyIndex].highlightColor }}
-            />
 
             <div className="relative z-10 space-y-6">
               {/* Header of Story Card */}

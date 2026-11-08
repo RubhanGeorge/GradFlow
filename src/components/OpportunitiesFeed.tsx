@@ -10,7 +10,6 @@ import {
   DollarSign, 
   RefreshCw, 
   CheckCircle2, 
-  Terminal,
   ShieldAlert,
   SlidersHorizontal
 } from 'lucide-react';
@@ -52,10 +51,9 @@ export const OpportunitiesFeed: React.FC<OpportunitiesFeedProps> = ({
     <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-8">
       {/* Header Banner - Sleek Onyx Black with Glowing Orange Accent */}
       <div className="bg-[#111111] rounded-3xl p-6 sm:p-8 text-white border-2 border-black shadow-xl relative overflow-hidden">
-        {/* Moving Particles Animation for Section Design Background */}
+        {/* Simple moving particles animation (crisp, zero-glow) */}
         <MovingParticlesBackground variant="card" particleCount={55} />
 
-        <div className="absolute top-0 right-0 w-80 h-80 bg-[#FF5722]/15 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-[#1F1F24] text-[#FF5722] text-xs font-bold border border-[#333338]">
@@ -69,14 +67,6 @@ export const OpportunitiesFeed: React.FC<OpportunitiesFeedProps> = ({
               Synchronized by automated cron from Unstop, Devpost, and leading tech portals, summarized with Gemini AI.
             </p>
           </div>
-
-          <button
-            onClick={openScraperModal}
-            className="self-start md:self-auto inline-flex items-center px-4 py-2.5 rounded-xl bg-[#1A1A1E] hover:bg-[#25252A] text-white text-xs font-bold border border-[#333338] transition-colors cursor-pointer"
-          >
-            <Terminal className="w-4 h-4 mr-2 text-[#FF5722]" />
-            <span>Inspect Scraper Specs</span>
-          </button>
         </div>
       </div>
 

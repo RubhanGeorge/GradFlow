@@ -458,10 +458,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
           Lets users search, select, and filter any company from the master DB
          ========================================================================= */}
       <div className="bg-[#09090B] text-white rounded-3xl p-6 sm:p-8 border-2 border-black shadow-2xl relative overflow-hidden space-y-6">
-        {/* Moving Particles Animation for Section Design Background */}
+        {/* Simple moving particles animation (crisp, zero-glow) */}
         <MovingParticlesBackground variant="card" particleCount={65} />
-
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[radial-gradient(circle,rgba(255,87,34,0.18)_0%,transparent_70%)] pointer-events-none" />
 
         <div className="relative z-10">
           <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#18181B] text-[#FF5722] text-xs font-bold border border-white/10 mb-2">

@@ -466,10 +466,9 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({ onSuccess, openAuthM
       <div ref={formContainerRef} className="max-w-4xl mx-auto py-6 px-4 sm:px-6">
         {/* Form Header Banner - Sleek Obsidian Black Canvas with Orange Accents */}
         <div className="bg-[#111111] rounded-3xl p-6 sm:p-8 text-white mb-8 border-2 border-black shadow-xl relative overflow-hidden">
-          {/* Moving Particles Animation for Section Design Background */}
+          {/* Simple moving particles animation (crisp, zero-glow) */}
           <MovingParticlesBackground variant="card" particleCount={55} />
 
-          <div className="absolute top-0 right-0 w-80 h-80 bg-[#FF5722]/15 rounded-full blur-3xl pointer-events-none" />
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-[#1F1F24] text-[#FF5722] text-xs font-bold mb-2 border border-[#333338]">

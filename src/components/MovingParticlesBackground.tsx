@@ -61,12 +61,11 @@ export const MovingParticlesBackground: React.FC<MovingParticlesProps> = ({
       baseAlpha: number;
       pulseSpeed: number;
       pulsePhase: number;
-      glowRadius: number;
     }
 
     const particles: Particle[] = [];
     for (let i = 0; i < targetCount; i++) {
-      const radius = Math.random() * 2.2 + 1.4; // Slightly larger for unmistakable presence
+      const radius = Math.random() * 1.6 + 1.0; // Simple, clean crisp dot size
       particles.push({
         x: Math.random() * width,
         y: Math.random() * height,
@@ -74,10 +73,9 @@ export const MovingParticlesBackground: React.FC<MovingParticlesProps> = ({
         vy: ((Math.random() - 0.5) * 0.7 - 0.2) * speedMultiplier, // Gentle floating upward motion
         radius,
         color: colors[Math.floor(Math.random() * colors.length)],
-        baseAlpha: Math.random() * 0.45 + 0.4, // Rich, bright visibility
+        baseAlpha: Math.random() * 0.4 + 0.45, // Clean, crisp visibility
         pulseSpeed: Math.random() * 0.03 + 0.015,
-        pulsePhase: Math.random() * Math.PI * 2,
-        glowRadius: radius * (Math.random() * 2.5 + 2.5)
+        pulsePhase: Math.random() * Math.PI * 2
       });
     }
 
@@ -106,17 +104,17 @@ export const MovingParticlesBackground: React.FC<MovingParticlesProps> = ({
 
       ctx.clearRect(0, 0, width, height);
 
-      // Connective constellation threads between nearby particles
+      // Connective subtle constellation threads between nearby particles
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x;
           const dy = particles[i].y - particles[j].y;
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist < threshold) {
-            const lineAlpha = (1 - dist / threshold) * 0.28;
+            const lineAlpha = (1 - dist / threshold) * 0.16;
             ctx.beginPath();
             ctx.strokeStyle = `rgba(255, 87, 34, ${lineAlpha.toFixed(3)})`;
-            ctx.lineWidth = 1;
+            ctx.lineWidth = 0.75;
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
             ctx.stroke();
@@ -124,7 +122,7 @@ export const MovingParticlesBackground: React.FC<MovingParticlesProps> = ({
         }
       }
 
-      // Glowing moving particles
+      // Simple, crisp moving particle dots without thick glow
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
         p.x += p.vx;
@@ -137,22 +135,13 @@ export const MovingParticlesBackground: React.FC<MovingParticlesProps> = ({
         if (p.y < -15) p.y = height + 15;
         if (p.y > height + 15) p.y = -15;
 
-        const currentAlpha = Math.max(0.25, Math.min(1, p.baseAlpha + Math.sin(p.pulsePhase) * 0.25));
+        const currentAlpha = Math.max(0.25, Math.min(0.9, p.baseAlpha + Math.sin(p.pulsePhase) * 0.18));
 
-        // Outer ambient glow aura
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.glowRadius, 0, Math.PI * 2);
-        ctx.fillStyle = `${p.color}${(currentAlpha * 0.38).toFixed(3)})`;
-        ctx.fill();
-
-        // Core bright glowing point
+        // Clean, simple particle dot (no blur, no shadow, no thick aura)
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
         ctx.fillStyle = `${p.color}${currentAlpha.toFixed(3)})`;
-        ctx.shadowColor = 'rgba(255, 87, 34, 0.85)';
-        ctx.shadowBlur = p.radius * 3.5;
         ctx.fill();
-        ctx.shadowBlur = 0;
       }
 
       animationFrameId = requestAnimationFrame(render);
