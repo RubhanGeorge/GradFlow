@@ -69,12 +69,29 @@ export const Dashboard: React.FC<DashboardProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Filter company search suggestions (exact same logic as in Submit Review)
+  // Filter company search suggestions (prefix matching by starting letter)
   const filteredCompanySuggestions = useMemo(() => {
     const query = companySearchInput.toLowerCase().trim();
     if (!query) return BANGALORE_COMPANIES.slice(0, 10);
-    const matches = BANGALORE_COMPANIES.filter(c => c.toLowerCase().includes(query));
-    return matches.slice(0, 15);
+
+    // 1. Primary match: company name starts with input query
+    const prefixMatches = BANGALORE_COMPANIES.filter(c => 
+      c.toLowerCase().startsWith(query)
+    );
+
+    // 2. When user enters single character, strictly show companies starting with that letter
+    if (query.length === 1) {
+      return prefixMatches.slice(0, 15);
+    }
+
+    // 3. For multi-character queries, append word-boundary matches (e.g. "Consulting" -> "Boston Consulting Group")
+    const wordBoundaryMatches = BANGALORE_COMPANIES.filter(c => {
+      if (c.toLowerCase().startsWith(query)) return false;
+      const words = c.toLowerCase().split(/\s+/);
+      return words.some(w => w.startsWith(query));
+    });
+
+    return [...prefixMatches, ...wordBoundaryMatches].slice(0, 15);
   }, [companySearchInput]);
 
   // Feedbacks filtered by company and secondary criteria
@@ -457,9 +474,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
           RESTRUCTURED COMPANY SEARCH & SELECTION CONTROLLER
           Lets users search, select, and filter any company from the master DB
          ========================================================================= */}
-      <div className="bg-[#09090B] text-white rounded-3xl p-6 sm:p-8 border-2 border-black shadow-2xl relative overflow-hidden space-y-6">
-        {/* Simple moving particles animation (crisp, zero-glow) */}
-        <MovingParticlesBackground variant="card" particleCount={65} />
+      <div className="bg-[#09090B] text-white rounded-3xl p-6 sm:p-8 border-2 border-black shadow-2xl relative space-y-6 z-30">
+        {/* Simple moving particles animation clipped to card radius */}
+        <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none z-0">
+          <MovingParticlesBackground variant="card" particleCount={65} />
+        </div>
 
         <div className="relative z-10">
           <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#18181B] text-[#FF5722] text-xs font-bold border border-white/10 mb-2">
@@ -475,7 +494,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
 
         {/* Expanded Search Autocomplete Controller - Exact same style and suggestions as Submit Review */}
-        <div className="relative z-10 pt-2" ref={companySearchRef}>
+        <div className="relative z-50 pt-2" ref={companySearchRef}>
           <label className="block text-xs font-bold text-slate-300 mb-1.5 flex items-center">
             <Search className="w-3.5 h-3.5 mr-1.5 text-[#FF5722]" />
             Search & Select Recruiter
@@ -519,9 +538,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
             )}
           </div>
 
-          {/* Autocomplete Dropdown - Exact same UI & interaction as Submit Review */}
+          {/* Autocomplete Dropdown - Positioned prominently above all background layers */}
           {showCompanyDropdown && filteredCompanySuggestions.length > 0 && (
-            <div className="absolute z-40 left-0 right-0 mt-1.5 bg-white text-slate-900 rounded-xl shadow-2xl border-2 border-[#111111] max-h-60 overflow-y-auto divide-y divide-slate-100">
+            <div className="absolute z-50 left-0 right-0 mt-2 bg-white text-slate-900 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5)] border-2 border-[#111111] max-h-72 overflow-y-auto divide-y divide-slate-100 ring-4 ring-black/10">
               {filteredCompanySuggestions.map(comp => {
                 const isSelected = selectedCompany.toLowerCase() === comp.toLowerCase();
                 return (
@@ -559,7 +578,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           SELECTED RECRUITER SPOTLIGHT HERO CARD
           Shows verified visited colleges count, difficulty, duration & round count
          ========================================================================= */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-black shadow-fintech space-y-6">
+      <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-black shadow-fintech space-y-6 relative z-10">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
           <div className="flex items-center space-x-3.5">
             <div className="w-12 h-12 rounded-2xl bg-[#09090B] text-white flex items-center justify-center font-black text-xl shadow-md border-2 border-[#FF5722]">

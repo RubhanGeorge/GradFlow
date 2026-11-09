@@ -128,12 +128,29 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({ onSuccess, openAuthM
     };
   }, []);
 
-  // Filtered Companies for Autocomplete
+  // Filtered Companies for Autocomplete (prefix matching by starting letter)
   const filteredCompanies = useMemo(() => {
     if (!companyInput.trim()) return BANGALORE_COMPANIES.slice(0, 8);
-    const query = companyInput.toLowerCase();
-    const matches = BANGALORE_COMPANIES.filter(c => c.toLowerCase().includes(query));
-    return matches.slice(0, 10);
+    const query = companyInput.toLowerCase().trim();
+
+    // 1. Primary match: company name starts with input query
+    const prefixMatches = BANGALORE_COMPANIES.filter(c => 
+      c.toLowerCase().startsWith(query)
+    );
+
+    // 2. When user enters single character, strictly show companies starting with that letter
+    if (query.length === 1) {
+      return prefixMatches.slice(0, 10);
+    }
+
+    // 3. For multi-character queries, append word-boundary matches
+    const wordBoundaryMatches = BANGALORE_COMPANIES.filter(c => {
+      if (c.toLowerCase().startsWith(query)) return false;
+      const words = c.toLowerCase().split(/\s+/);
+      return words.some(w => w.startsWith(query));
+    });
+
+    return [...prefixMatches, ...wordBoundaryMatches].slice(0, 10);
   }, [companyInput]);
 
   // Click outside listener for company dropdown
@@ -594,7 +611,7 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({ onSuccess, openAuthM
 
             {/* Autocomplete Dropdown */}
             {showCompanyDropdown && filteredCompanies.length > 0 && (
-              <div className="absolute z-30 left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border-2 border-[#111111] max-h-56 overflow-y-auto divide-y divide-slate-100">
+              <div className="absolute z-50 left-0 right-0 mt-1.5 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.18)] border-2 border-[#111111] max-h-64 overflow-y-auto divide-y divide-slate-100 ring-4 ring-black/5">
                 {filteredCompanies.map(comp => (
                   <button
                     type="button"
