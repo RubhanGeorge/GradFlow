@@ -36,11 +36,11 @@ import { MovingParticlesBackground } from './MovingParticlesBackground';
 
 interface FeedbackFormProps {
   onSuccess: (newFeedback?: InterviewFeedback) => void;
-  openAuthModal: () => void;
+  openAuthModal: (reason?: string) => void;
 }
 
 export const FeedbackForm: React.FC<FeedbackFormProps> = ({ onSuccess, openAuthModal }) => {
-  const { userProfile } = useAuth();
+  const { currentUser, userProfile } = useAuth();
   const formContainerRef = useRef<HTMLDivElement>(null);
 
   // Scroll Progress State (0% to 100%) for Sticky Progress Bar below top nav
@@ -327,6 +327,15 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({ onSuccess, openAuthM
     e.preventDefault();
     setFormError(null);
 
+    // Mandatory Authentication Guard (Task #2)
+    // Unauthenticated users cannot submit interview reviews
+    if (!currentUser && !userProfile) {
+      const authRequiredMessage = 'Login Required: Please sign in with your verified college email to post your interview feedback.';
+      setFormError(authRequiredMessage);
+      openAuthModal(authRequiredMessage);
+      return;
+    }
+
     // Strict Validation - Every required item must be explicitly provided
     if (!companyInput.trim()) {
       setFormError('Please specify the company you interviewed with (Question 1).');
@@ -363,7 +372,12 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({ onSuccess, openAuthM
 
     setIsSubmitting(true);
 
+    const emailDomain = (currentUser?.email || userProfile?.email || '').split('@')[1] || userProfile?.collegeDomain || 'cmrit.ac.in';
+    const userEmail = currentUser?.email || userProfile?.email || '';
+    const submittedByUid = currentUser?.uid || userProfile?.uid || 'anonymous-student';
+
     const feedbackPayload: InterviewFeedback = {
+      feedbackType: 'user',
       company: companyInput.trim(),
       role: roleInput.trim(),
       round: selectedRound,
@@ -376,28 +390,67 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({ onSuccess, openAuthM
         aiPercent,
         aiDifficulty: aiDiff || 'Medium',
         aptitudePercent,
-        aptitudeDifficulty: aptitudeDiff || 'Medium'
+        aptitudeDifficulty: aptitudeDiff || 'Medium',
+        dsa: techPercent,
+        systemDesign: aiPercent,
+        behavioral: aptitudePercent
       },
       topicsTested: selectedTopics,
       technicalQuestions: technicalQuestions.trim() || undefined,
       hrQuestions: hrQuestions.trim() || undefined,
       juniorTips: juniorTips.trim() || undefined,
       submittedAt: new Date().toISOString(),
-      collegeDomain: userProfile?.collegeDomain || 'university.edu',
-      authorUid: userProfile?.uid || 'anonymous-student',
+      collegeDomain: emailDomain,
+      userEmail: userEmail,
+      submittedByUid: submittedByUid,
+      authorUid: submittedByUid,
       year: new Date().getFullYear()
     };
 
+    // Prepare clean payload for Firestore (no undefined values)
+    const firestoreData: Record<string, any> = {
+      feedbackType: 'user',
+      company: companyInput.trim(),
+      role: roleInput.trim(),
+      round: Number(selectedRound),
+      durationMinutes: Number(durationMinutes),
+      overallDifficulty,
+      panelTypes: selectedPanels,
+      questionStyles: {
+        techPercent,
+        techDifficulty: techDiff || 'Medium',
+        aiPercent,
+        aiDifficulty: aiDiff || 'Medium',
+        aptitudePercent,
+        aptitudeDifficulty: aptitudeDiff || 'Medium',
+        dsa: techPercent,
+        systemDesign: aiPercent,
+        behavioral: aptitudePercent
+      },
+      topicsTested: selectedTopics,
+      collegeDomain: emailDomain,
+      userEmail: userEmail,
+      submittedByUid: submittedByUid,
+      authorUid: submittedByUid,
+      year: new Date().getFullYear(),
+      submittedAt: serverTimestamp()
+    };
+
+    if (technicalQuestions.trim()) {
+      firestoreData.technicalQuestions = technicalQuestions.trim();
+    }
+    if (hrQuestions.trim()) {
+      firestoreData.hrQuestions = hrQuestions.trim();
+    }
+    if (juniorTips.trim()) {
+      firestoreData.juniorTips = juniorTips.trim();
+    }
+
     try {
       // Push directly to Firebase Firestore
-      await addDoc(collection(db, 'interview_feedback'), {
-        ...feedbackPayload,
-        submittedAt: serverTimestamp()
-      });
-      console.log('Feedback submitted to Firestore successfully');
-    } catch (err) {
-      console.warn('Direct Firestore write notice (using authenticated client store):', err);
-    } finally {
+      const docRef = await addDoc(collection(db, 'interview_feedback'), firestoreData);
+      console.log('Feedback submitted to Firestore successfully with ID:', docRef.id);
+      
       setIsSubmitting(false);
       setSubmittedSuccess(true);
       
@@ -412,7 +465,14 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({ onSuccess, openAuthM
         // Safe confetti fallback
       }
 
-      onSuccess(feedbackPayload);
+      onSuccess({
+        id: docRef.id,
+        ...feedbackPayload
+      });
+    } catch (err: any) {
+      console.error('Direct Firestore write error:', err);
+      setIsSubmitting(false);
+      setFormError('Failed to record feedback to Firestore database: ' + (err.message || 'Permission denied. Please ensure you are logged in with your verified college email.'));
     }
   };
 

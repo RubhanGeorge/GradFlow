@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
 import { LandingHome } from './components/LandingHome';
@@ -8,7 +8,10 @@ import { OpportunitiesFeed } from './components/OpportunitiesFeed';
 import { FAQPage } from './components/FAQPage';
 import { AuthModal } from './components/AuthModal';
 import { ScraperModal } from './components/ScraperModal';
-import { INITIAL_FEEDBACK_DATA, INITIAL_OPPORTUNITIES } from './data/seedData';
+import { AdminDevModal } from './components/AdminDevModal';
+import { INITIAL_OPPORTUNITIES } from './data/seedData';
+import { BOT_SEED_FEEDBACKS } from './data/expandedBotSeeds';
+import { seedBotFeedbacks } from './services/adminService';
 import { InterviewFeedback, Opportunity } from './types';
 import { db, testFirebaseConnection } from './firebase/config';
 import { collection, onSnapshot, query, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -16,14 +19,19 @@ import {
   CheckCircle2, 
   RefreshCw,
   School,
-  GraduationCap
+  GraduationCap,
+  Database,
+  ShieldCheck,
+  Terminal
 } from 'lucide-react';
 
 const MainApp: React.FC = () => {
   const { isAuthorizedDomain } = useAuth();
   const [activeTab, setActiveTab] = useState<'home' | 'dashboard' | 'feedback' | 'opportunities' | 'faq'>('home');
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [authModalReason, setAuthModalReason] = useState<string | undefined>(undefined);
   const [isScraperModalOpen, setIsScraperModalOpen] = useState<boolean>(false);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState<boolean>(false);
 
   // Automatically scroll to the top of the page when navigating between views
   useEffect(() => {
@@ -33,10 +41,15 @@ const MainApp: React.FC = () => {
   }, [activeTab]);
 
   // Live state
-  const [feedbacks, setFeedbacks] = useState<InterviewFeedback[]>(INITIAL_FEEDBACK_DATA);
+  const [feedbacks, setFeedbacks] = useState<InterviewFeedback[]>(BOT_SEED_FEEDBACKS);
   const [opportunities, setOpportunities] = useState<Opportunity[]>(INITIAL_OPPORTUNITIES);
   const [isScraping, setIsScraping] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'info'; text: string } | null>(null);
+
+  const openAuthWithReason = useCallback((reason?: string) => {
+    setAuthModalReason(reason);
+    setIsAuthModalOpen(true);
+  }, []);
 
   const showToast = (text: string, type: 'success' | 'info' = 'success') => {
     setToastMessage({ text, type });
@@ -50,6 +63,7 @@ const MainApp: React.FC = () => {
     // Listen to interview_feedback collection
     try {
       const feedbackQuery = query(collection(db, 'interview_feedback'));
+      let hasCheckedInitial = false;
       const unsubscribe = onSnapshot(
         feedbackQuery,
         (snapshot) => {
@@ -58,13 +72,24 @@ const MainApp: React.FC = () => {
               id: doc.id,
               ...doc.data()
             } as InterviewFeedback));
-            // Merge with seed data for richness if count is small
-            const merged = [...liveList, ...INITIAL_FEEDBACK_DATA.filter(s => !liveList.some(l => l.company === s.company && l.role === s.role))];
-            setFeedbacks(merged);
+            setFeedbacks(liveList);
+          } else {
+            if (!hasCheckedInitial) {
+              hasCheckedInitial = true;
+              // Seed once into Firestore if completely empty
+              seedBotFeedbacks().then(res => {
+                if (!res.success) {
+                  setFeedbacks(BOT_SEED_FEEDBACKS);
+                }
+              });
+            } else {
+              setFeedbacks([]);
+            }
           }
         },
         (err) => {
           console.warn('Live feedback subscription notice:', err.message);
+          setFeedbacks(BOT_SEED_FEEDBACKS);
         }
       );
       return () => unsubscribe();
@@ -165,7 +190,7 @@ const MainApp: React.FC = () => {
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        openAuthModal={() => setIsAuthModalOpen(true)}
+        openAuthModal={() => openAuthWithReason()}
       />
 
       {/* Main View Router */}
@@ -173,7 +198,7 @@ const MainApp: React.FC = () => {
         {activeTab === 'home' && (
           <LandingHome
             onNavigate={(tab) => setActiveTab(tab)}
-            openAuthModal={() => setIsAuthModalOpen(true)}
+            openAuthModal={() => openAuthWithReason()}
             totalFeedbacksCount={feedbacks.length}
           />
         )}
@@ -188,7 +213,7 @@ const MainApp: React.FC = () => {
         {activeTab === 'feedback' && (
           <FeedbackForm
             onSuccess={handleFeedbackSuccess}
-            openAuthModal={() => setIsAuthModalOpen(true)}
+            openAuthModal={(reason) => openAuthWithReason(reason)}
           />
         )}
 
@@ -211,7 +236,11 @@ const MainApp: React.FC = () => {
       {/* Modals */}
       <AuthModal
         isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
+        onClose={() => {
+          setIsAuthModalOpen(false);
+          setAuthModalReason(undefined);
+        }}
+        reasonMessage={authModalReason}
       />
 
       <ScraperModal
@@ -219,6 +248,12 @@ const MainApp: React.FC = () => {
         onClose={() => setIsScraperModalOpen(false)}
         onTriggerScrape={handleTriggerScrape}
         isScraping={isScraping}
+      />
+
+      <AdminDevModal
+        isOpen={isAdminModalOpen}
+        onClose={() => setIsAdminModalOpen(false)}
+        feedbacks={feedbacks}
       />
 
       {/* Institutional High-Contrast Black & Orange Footer */}
@@ -234,11 +269,21 @@ const MainApp: React.FC = () => {
               </div>
               <span className="text-sm font-sans tracking-tight font-black">GradFlow</span>
             </div>
+
+            {/* Developer / Admin Access button */}
+            <button
+              onClick={() => setIsAdminModalOpen(true)}
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#1A1A20] hover:bg-[#25252D] text-[11px] font-mono font-bold text-[#FFA726] border border-[#333338] transition-colors cursor-pointer"
+              title="Admin controls for bot seed, purge, and dynamic Firestore whitelist"
+            >
+              <Terminal className="w-3.5 h-3.5 text-[#FF5722]" />
+              <span>Admin &amp; Dev Console</span>
+            </button>
           </div>
 
           <div className="pt-4 border-t border-[#222226] flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-400">
             <div>
-              100% Student-Powered Placement Intelligence. Zero commercial paywalls.
+              100% Student-Powered Placement Intelligence across 50 authorized Bangalore institutions.
             </div>
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
               <button 

@@ -3,19 +3,30 @@ export type Difficulty = 'Easy' | 'Medium' | 'Hard';
 export type RoundNumber = 1 | 2 | 3 | 4 | 5;
 
 export interface QuestionStyleDistribution {
-  techPercent: number;
-  techDifficulty: Difficulty;
-  aiPercent: number;
-  aiDifficulty: Difficulty;
-  aptitudePercent: number;
-  aptitudeDifficulty: Difficulty;
+  techPercent?: number;
+  techDifficulty?: Difficulty;
+  aiPercent?: number;
+  aiDifficulty?: Difficulty;
+  aptitudePercent?: number;
+  aptitudeDifficulty?: Difficulty;
+  dsa?: number;
+  systemDesign?: number;
+  behavioral?: number;
+}
+
+export interface WhitelistedDomain {
+  domain: string;
+  collegeName: string;
+  status: 'active' | 'disabled';
+  addedAt?: string | number | { seconds: number; nanoseconds: number };
 }
 
 export interface InterviewFeedback {
   id?: string;
+  feedbackType?: 'user' | 'bot';
   company: string;
   role: string;
-  round: RoundNumber;
+  round: RoundNumber | string;
   durationMinutes: number;
   overallDifficulty: Difficulty;
   panelTypes: string[];
@@ -26,6 +37,8 @@ export interface InterviewFeedback {
   juniorTips?: string;
   submittedAt: string | number | { seconds: number; nanoseconds: number };
   collegeDomain: string;
+  userEmail?: string;
+  submittedByUid?: string;
   authorUid?: string;
   year?: number;
 }

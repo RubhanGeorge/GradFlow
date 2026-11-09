@@ -57,6 +57,11 @@
           "description": "Optional preparation tips and warnings for juniors",
           "maxLength": 1000
         },
+        "feedbackType": {
+          "type": "string",
+          "description": "Origin flag: 'user' for authentic student submission, 'bot' for platform mock entries",
+          "enum": ["user", "bot"]
+        },
         "submittedAt": {
           "type": "string",
           "description": "Server timestamp of submission"
@@ -70,6 +75,16 @@
           "type": "string",
           "description": "Firebase Auth UID of student submitter",
           "maxLength": 128
+        },
+        "submittedByUid": {
+          "type": "string",
+          "description": "Firebase Auth UID of submitter",
+          "maxLength": 128
+        },
+        "userEmail": {
+          "type": "string",
+          "description": "Email address of the submitter",
+          "maxLength": 100
         }
       },
       "required": [
@@ -81,8 +96,7 @@
         "panelTypes",
         "questionStyles",
         "topicsTested",
-        "collegeDomain",
-        "authorUid"
+        "collegeDomain"
       ]
     },
     "Opportunity": {
@@ -192,6 +206,33 @@
         }
       },
       "required": ["uid", "email", "collegeDomain"]
+    },
+    "WhitelistedDomain": {
+      "title": "WhitelistedDomain",
+      "description": "Institutional college email domain approved for campus portal registration.",
+      "type": "object",
+      "properties": {
+        "domain": {
+          "type": "string",
+          "description": "Official domain suffix e.g. cmrit.ac.in, rvce.edu.in",
+          "maxLength": 80
+        },
+        "collegeName": {
+          "type": "string",
+          "description": "Full formal name of the institution",
+          "maxLength": 150
+        },
+        "status": {
+          "type": "string",
+          "description": "Domain authorization state",
+          "enum": ["active", "disabled"]
+        },
+        "addedAt": {
+          "type": "string",
+          "description": "Timestamp of domain registration"
+        }
+      },
+      "required": ["domain", "collegeName", "status"]
     }
   },
   "firestore": {
@@ -212,6 +253,12 @@
         "$ref": "UserProfile"
       },
       "description": "Private user profile records"
+    },
+    "/whitelisted_domains/{domainId}": {
+      "schema": {
+        "$ref": "WhitelistedDomain"
+      },
+      "description": "Dynamic whitelist store of authorized campus engineering email domains"
     }
   }
 }

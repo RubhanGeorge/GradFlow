@@ -973,7 +973,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       </div>
 
                       <span className="text-[11px] font-semibold px-2 py-1 bg-slate-100 text-slate-700 rounded-lg whitespace-nowrap">
-                        {ROUND_LABELS[item.round] || `Round ${item.round}`}
+                        {ROUND_LABELS[Number(item.round)] || `Round ${item.round}`}
                       </span>
                     </div>
 
