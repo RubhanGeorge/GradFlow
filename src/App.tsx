@@ -21,8 +21,7 @@ import {
   School,
   GraduationCap,
   Database,
-  ShieldCheck,
-  Terminal
+  ShieldCheck
 } from 'lucide-react';
 
 const MainApp: React.FC = () => {
@@ -269,16 +268,6 @@ const MainApp: React.FC = () => {
               </div>
               <span className="text-sm font-sans tracking-tight font-black">GradFlow</span>
             </div>
-
-            {/* Developer / Admin Access button */}
-            <button
-              onClick={() => setIsAdminModalOpen(true)}
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#1A1A20] hover:bg-[#25252D] text-[11px] font-mono font-bold text-[#FFA726] border border-[#333338] transition-colors cursor-pointer"
-              title="Admin controls for bot seed, purge, and dynamic Firestore whitelist"
-            >
-              <Terminal className="w-3.5 h-3.5 text-[#FF5722]" />
-              <span>Admin &amp; Dev Console</span>
-            </button>
           </div>
 
           <div className="pt-4 border-t border-[#222226] flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-400">

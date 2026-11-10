@@ -95,6 +95,7 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({ onSuccess, openAuthM
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [submittedSuccess, setSubmittedSuccess] = useState<boolean>(false);
+  const pendingAutoSubmitRef = useRef<boolean>(false);
 
   // Scroll listener to update the sticky progress bar color width dynamically
   useEffect(() => {
@@ -339,20 +340,8 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({ onSuccess, openAuthM
     setFormError(null);
   };
 
-  // Handle Form Submission
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError(null);
-
-    // Mandatory Authentication Guard (Task #2)
-    // Unauthenticated users cannot submit interview reviews
-    if (!currentUser && !userProfile) {
-      const authRequiredMessage = 'Login Required: Please sign in with your verified college email to post your interview feedback.';
-      setFormError(authRequiredMessage);
-      openAuthModal(authRequiredMessage);
-      return;
-    }
-
+  // Handle Direct Execution of Submission to Firestore
+  const executeDirectSubmission = async () => {
     // Strict Validation - Every required item must be explicitly provided
     if (!companyInput.trim()) {
       setFormError('Please specify the company you interviewed with (Question 1).');
@@ -388,6 +377,7 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({ onSuccess, openAuthM
     }
 
     setIsSubmitting(true);
+    setFormError(null);
 
     const emailDomain = (currentUser?.email || userProfile?.email || '').split('@')[1] || userProfile?.collegeDomain || 'cmrit.ac.in';
     const userEmail = currentUser?.email || userProfile?.email || '';
@@ -493,6 +483,62 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({ onSuccess, openAuthM
     }
   };
 
+  // Auto-Submit Watcher: When user successfully logs in or signs up with college domain
+  useEffect(() => {
+    if (currentUser || userProfile) {
+      // Clear any previous "Login Required" error message immediately
+      setFormError(prev => (prev && prev.includes('Login Required') ? null : prev));
+
+      // If submission was pending auth, auto-submit directly now without waiting for user to click again!
+      if (pendingAutoSubmitRef.current) {
+        pendingAutoSubmitRef.current = false;
+        if (
+          companyInput.trim() &&
+          roleInput.trim() &&
+          selectedRound !== null &&
+          durationMinutes !== null &&
+          durationMinutes > 0 &&
+          overallDifficulty !== null &&
+          selectedPanels.length > 0 &&
+          isPercentValid &&
+          selectedTopics.length > 0
+        ) {
+          executeDirectSubmission();
+        }
+      }
+    }
+  }, [
+    currentUser,
+    userProfile,
+    companyInput,
+    roleInput,
+    selectedRound,
+    durationMinutes,
+    overallDifficulty,
+    selectedPanels,
+    isPercentValid,
+    selectedTopics
+  ]);
+
+  // Handle Form Submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError(null);
+
+    // Mandatory Authentication Guard (Task #2)
+    // If unauthenticated, arm pending auto-submit and open AuthModal immediately
+    if (!currentUser && !userProfile) {
+      pendingAutoSubmitRef.current = true;
+      const authRequiredMessage = 'Login Required: Please sign in with your verified college email to post your interview feedback.';
+      setFormError(authRequiredMessage);
+      openAuthModal(authRequiredMessage);
+      return;
+    }
+
+    // Authenticated user: execute direct submission immediately
+    await executeDirectSubmission();
+  };
+
   if (submittedSuccess) {
     return (
       <div className="max-w-2xl mx-auto my-12 bg-white rounded-3xl border-2 border-emerald-500 shadow-xl p-8 text-center space-y-6">
@@ -574,6 +620,54 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({ onSuccess, openAuthM
             <div className="p-4 rounded-xl bg-rose-50 border-2 border-rose-400 text-rose-800 text-sm flex items-start space-x-3 font-semibold">
               <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
               <div className="flex-1">{formError}</div>
+            </div>
+          )}
+
+          {/* Pre-Submission Contributor Verification & Institutional Login Status */}
+          {!currentUser && !userProfile ? (
+            <div className="p-4 sm:p-5 rounded-2xl bg-[#09090B] text-white border-2 border-[#FF5722]/40 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-start space-x-3 min-w-0">
+                <div className="p-2 rounded-xl bg-[#18181B] text-[#FF5722] border border-[#333338] shrink-0 mt-0.5">
+                  <ShieldCheck className="w-5 h-5 text-[#FF5722]" />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-sm font-bold text-white flex items-center gap-2 flex-wrap">
+                    <span>Sign In or Register Before Submitting</span>
+                    <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-[#FF5722]/20 text-[#FF7043] border border-[#FF5722]/30">Verified Suffix Required</span>
+                  </h4>
+                  <p className="text-xs text-slate-300 mt-0.5">
+                    Sign in with your approved college email (e.g. <span className="text-[#FFA726] font-mono">yourname@cmrit.ac.in</span>). Your review will be published anonymously under <span className="text-white font-mono">Verified @domain</span>.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => openAuthModal('Please sign in or register with your college email before submitting your review.')}
+                className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-[#FF5722] hover:bg-[#FF7043] text-white text-xs font-bold transition-all shadow-md hover:shadow-[#FF5722]/30 shrink-0 cursor-pointer"
+              >
+                Sign In / Register
+              </button>
+            </div>
+          ) : (
+            <div className="p-4 rounded-2xl bg-emerald-50/90 border-2 border-emerald-500/60 text-emerald-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+              <div className="flex items-center space-x-3 min-w-0">
+                <div className="p-2 rounded-xl bg-emerald-100 text-emerald-700 shrink-0">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-emerald-950 flex items-center gap-2 truncate">
+                    <span>Verified Contributor:</span>
+                    <span className="text-slate-900 font-extrabold truncate">{currentUser?.displayName || currentUser?.email || userProfile?.email}</span>
+                  </div>
+                  <div className="text-[11px] text-emerald-800 truncate">
+                    Institutional Domain: <span className="font-mono font-bold">@{((currentUser?.email || userProfile?.email || '').split('@')[1] || userProfile?.collegeDomain || 'cmrit.ac.in')}</span> • Fully anonymous on public cards
+                  </div>
+                </div>
+              </div>
+              <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-200/80 text-emerald-900 text-[11px] font-bold shrink-0 self-start sm:self-center">
+                <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+                <span>Ready to Submit Directly</span>
+              </span>
             </div>
           )}
 

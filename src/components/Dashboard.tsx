@@ -395,18 +395,55 @@ export const Dashboard: React.FC<DashboardProps> = ({
   // 7. YEAR-ON-YEAR INTERVIEW PATTERN SHIFT (2023 - 2026)
   const yoyData = useMemo(() => {
     const years = ['2023', '2024', '2025', '2026'];
-    let techTrend = [74, 68, 62, 56];
-    let aiTrend = [0, 6, 16, 26];
-    let aptTrend = [26, 26, 22, 18];
+    
+    // Group actual companyFeedbacks from Firestore by year
+    const byYear: { [year: string]: { tech: number[]; ai: number[]; apt: number[] } } = {
+      '2023': { tech: [], ai: [], apt: [] },
+      '2024': { tech: [], ai: [], apt: [] },
+      '2025': { tech: [], ai: [], apt: [] },
+      '2026': { tech: [], ai: [], apt: [] }
+    };
 
-    if (['Goldman Sachs', 'Morgan Stanley'].includes(selectedCompany)) {
-      techTrend = [60, 58, 52, 48];
-      aiTrend = [0, 4, 12, 18];
-      aptTrend = [40, 38, 36, 34];
-    } else if (['Amazon', 'Cred', 'Swiggy'].includes(selectedCompany)) {
-      techTrend = [78, 72, 64, 58];
-      aiTrend = [0, 8, 20, 28];
-      aptTrend = [22, 20, 16, 14];
+    companyFeedbacks.forEach(f => {
+      const y = String(f.year || '2025');
+      if (byYear[y]) {
+        byYear[y].tech.push(f.questionStyles?.techPercent ?? 60);
+        byYear[y].ai.push(f.questionStyles?.aiPercent ?? 20);
+        byYear[y].apt.push(f.questionStyles?.aptitudePercent ?? 20);
+      }
+    });
+
+    const hasData = Object.values(byYear).some(v => v.tech.length > 0);
+
+    let techTrend: number[];
+    let aiTrend: number[];
+    let aptTrend: number[];
+
+    if (hasData) {
+      techTrend = years.map(y => {
+        const arr = byYear[y].tech;
+        if (arr.length > 0) return Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
+        if (y === '2023') return Math.min(95, Math.round(styleRatios.tech * 1.15));
+        return styleRatios.tech;
+      });
+
+      aiTrend = years.map(y => {
+        const arr = byYear[y].ai;
+        if (arr.length > 0) return Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
+        if (y === '2023') return 0;
+        return styleRatios.ai;
+      });
+
+      aptTrend = years.map(y => {
+        const arr = byYear[y].apt;
+        if (arr.length > 0) return Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
+        if (y === '2023') return Math.max(5, 100 - techTrend[years.indexOf(y)] - aiTrend[years.indexOf(y)]);
+        return styleRatios.aptitude;
+      });
+    } else {
+      techTrend = [74, 68, 60, 54];
+      aiTrend = [0, 8, 18, 28];
+      aptTrend = [26, 24, 22, 18];
     }
 
     return {
@@ -421,7 +458,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           fill: true
         },
         {
-          label: 'AI & Vibe Tools Testing %',
+          label: 'AI & Emerging Tech %',
           data: aiTrend,
           borderColor: '#111111',
           backgroundColor: 'rgba(17, 17, 17, 0.08)',
@@ -438,7 +475,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         }
       ]
     };
-  }, [selectedCompany]);
+  }, [companyFeedbacks, styleRatios]);
 
   const yoyOptions = {
     responsive: true,
@@ -691,13 +728,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 key={college.domain}
                 className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between hover:border-[#FF5722]/40 transition-colors"
               >
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-lg bg-[#09090B] text-white flex items-center justify-center font-bold text-xs">
+                <div className="flex items-center space-x-3 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-[#09090B] text-white flex items-center justify-center font-bold text-xs shrink-0">
                     {idx + 1}
                   </div>
-                  <div>
-                    <div className="text-xs sm:text-sm font-bold text-slate-900">{college.name}</div>
-                    <div className="text-[11px] text-slate-500 font-mono">@{college.domain}</div>
+                  <div className="min-w-0">
+                    <div className="text-xs sm:text-sm font-bold text-slate-900 truncate">{college.name}</div>
                   </div>
                 </div>
 

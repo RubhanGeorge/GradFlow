@@ -112,25 +112,38 @@ export async function addCustomDomain(domain: string, collegeName: string): Prom
 }
 
 /**
- * Task #4: Seed robust bot feedback dataset across 20 recruiters into Firestore
+ * Task #4: Seed robust bot feedback dataset across all 105 Bangalore recruiters into Firestore
  */
 export async function seedBotFeedbacks(): Promise<{ success: boolean; count: number; error?: string }> {
   try {
-    const batch = writeBatch(db);
+    let currentBatch = writeBatch(db);
     let count = 0;
+    let opCount = 0;
 
     for (const item of BOT_SEED_FEEDBACKS) {
       const docRef = doc(db, 'interview_feedback', item.id || `bot-seed-${count}`);
-      batch.set(docRef, {
+      currentBatch.set(docRef, {
         ...item,
         feedbackType: 'bot',
         submittedAt: serverTimestamp()
       }, { merge: true });
+
       count++;
+      opCount++;
+
+      // Commit every 400 operations to stay well within Firestore's 500-op limit
+      if (opCount === 400) {
+        await currentBatch.commit();
+        currentBatch = writeBatch(db);
+        opCount = 0;
+      }
     }
 
-    await batch.commit();
-    console.log(`Successfully seeded ${count} bot feedback entries into Firestore.`);
+    if (opCount > 0) {
+      await currentBatch.commit();
+    }
+
+    console.log(`Successfully seeded ${count} bot feedback entries into Firestore across all companies.`);
     return { success: true, count };
   } catch (error: any) {
     console.warn('seedBotFeedbacks warning:', error);
